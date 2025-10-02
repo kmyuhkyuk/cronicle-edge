@@ -7,18 +7,25 @@
 # FROM alpine:3.19.1
 # RUN apk add --no-cache bash nodejs tini util-linux bash openssl procps coreutils curl tar jq
 
-FROM cronicle/base-alpine as build
-RUN apk add --no-cache npm python3 alpine-sdk
+FROM kmyuhkyuk/cronicle-base-debian as build
+RUN apt-get update && apt-get install -y npm
 COPY . /build
 WORKDIR /build
 RUN ./bundle /dist --mysql --pgsql --s3 --sqlite --tools
 
-FROM cronicle/base-alpine 
+FROM kmyuhkyuk/cronicle-base-debian
+
+COPY requirements.txt /tmp/
+RUN pip install --no-cache-dir -r /tmp/requirements.txt
+
+COPY requirements-pre.txt /tmp/
+RUN pip install --no-cache-dir --pre -r /tmp/requirements-pre.txt
 
 # non root user for shell plugin
 ARG CRONICLE_UID=1000
 ARG CRONICLE_GID=1099
-RUN  addgroup cronicle --gid $CRONICLE_GID && adduser -D -h /opt/cronicle -u $CRONICLE_UID -G cronicle cronicle
+RUN addgroup --system --gid $CRONICLE_GID cronicle
+RUN adduser --system --disabled-password --home /opt/cronicle --uid $CRONICLE_UID cronicle
 
 COPY --from=build /dist /opt/cronicle
 
@@ -32,4 +39,4 @@ WORKDIR /opt/cronicle
 # protect sensitive folders
 RUN  mkdir -p /opt/cronicle/data /opt/cronicle/conf && chmod 0700 /opt/cronicle/data /opt/cronicle/conf
 
-ENTRYPOINT ["/sbin/tini", "--"]
+ENTRYPOINT ["/usr/bin/tini", "--"]

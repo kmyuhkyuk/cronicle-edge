@@ -6,14 +6,7 @@ name: Docker
 # documentation.
 
 on:
-  release:
-    types: [published]
-  push:
-    branches: [ "main" ]
-    # Publish semver tags as releases.
-    tags: [ 'v*.*.*' ]
-  pull_request:
-    branches: [ "main" ]
+  workflow_dispatch:
 
 env:
   # Use docker.io for Docker Hub if empty
@@ -91,17 +84,10 @@ jobs:
         run: |
           echo "building for $DOCKERHUB_USERNAME"
           echo "$DOCKERHUB_TOKEN" | docker login --username "$DOCKERHUB_USERNAME" --password-stdin
-          if [ "${{ github.event_name }}" == "push" ]; then
-            TAG="latest"
-          elif [ "${{ github.event_name }}" == "release" ]; then
-            TAG="${{ github.event.release.tag_name }}"
-          else
-            echo "Unsupported event: ${{ github.event_name }}"
-            exit 1
-          fi
+          TAG="latest"
           echo "publishing tag $TAG"
-          docker build -t cronicle/edge:$TAG -f Dockerfile .
-          docker push cronicle/edge:$TAG    
+          docker build -t cronicle-edge:$TAG -f Dockerfile .
+          docker push cronicle-edge:$TAG    
       
       # Sign the resulting Docker image digest except on PRs.
       # This will only write to the public Rekor transparency log when the Docker
