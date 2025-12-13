@@ -1,4 +1,4 @@
-name: Push to docker.io multiarch
+name: Push base-alpine to docker.io multiarch
 
 on:
     workflow_dispatch:
@@ -34,10 +34,10 @@ jobs:
       uses: docker/build-push-action@v5
       with:
         context: .
-        file: ./Dockerfile
+        file: ./Docker/alpine-base.dockerfile
         platforms: linux/amd64,linux/arm64,linux/arm/v7
         push: true
         cache-from: type=gha
         cache-to: type=gha,mode=max
         tags: |
-          kmyuhkyuk/cronicle-edge:${{ env.TAG }}
+          kmyuhkyuk/cronicle-base-alpine:${{ env.TAG }}
