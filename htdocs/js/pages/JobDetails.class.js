@@ -161,6 +161,7 @@ Class.subclass(Page.Base, "Page.JobDetails", {
 		var job = deep_copy_object(event);
 		job.now = this.job.now;
 		job.params = this.job.params;
+		job.arg = this.job.arg;
 
 		app.showProgress(1.0, "Starting job...");
 
