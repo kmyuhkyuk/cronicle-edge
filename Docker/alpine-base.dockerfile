@@ -6,6 +6,11 @@
 # multi-arch build
 # docker buildx build --platform linux/amd64,linux/arm64,linux/arm/v7 -t cronicle/base-alpine:v3.22.2 --push -f Docker/alpine-base.dockerfile .
 
-FROM alpine:3.22.2
+FROM python:alpine3.22
 RUN apk add --no-cache bash nodejs tini util-linux bash openssl procps coreutils curl tar jq busybox-extras
 
+COPY requirements.txt /tmp/
+RUN pip install --no-cache-dir -r /tmp/requirements.txt
+
+COPY requirements-pre.txt /tmp/
+RUN pip install --no-cache-dir --pre -r /tmp/requirements-pre.txt

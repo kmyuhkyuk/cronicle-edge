@@ -1,13 +1,20 @@
 name: Push to docker.io multiarch
 
 on:
-  release:
-    types: [published]
   push:
-    branches: [ "main" ]
-    tags: [ 'v*.*.*' ]
-  pull_request:
-    branches: [ "main" ]
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Image tag to build and push'
+        required: true
+        type: string
+        default: 'latest'
+
+env:
+  DOCKERHUB_USERNAME: ${{ secrets.DHUB_USER }}
+  IMAGE_NAME: cronicle-edge
 
 jobs:
   # Run on PRs: build Docker image (no push) and run tests
@@ -69,14 +76,14 @@ jobs:
           username: ${{ secrets.DHUB_USER }}
           password: ${{ secrets.DHUB_TOKEN }}
 
-      - name: Set release tag as image tag
-        id: set-tag
-        run: |
-          if [ "${{ github.event_name }}" == "push" ]; then
-            echo "TAG=latest" >> $GITHUB_ENV
-          elif [ "${{ github.event_name }}" == "release" ]; then
-            echo "TAG=${{ github.event.release.tag_name }}" >> $GITHUB_ENV
-          fi
+      - name: Extract Docker metadata (tags, labels)
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=latest
+            type=raw,value=${{ github.event.inputs.tag || github.ref_name }},enable=${{ (github.event.inputs.tag || github.ref_name) != 'latest' }}
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
@@ -85,7 +92,7 @@ jobs:
           file: ./Dockerfile
           platforms: linux/amd64,linux/arm64,linux/arm/v7
           push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          tags: |
-            docker.io/cronicle/edge:${{ env.TAG }}
