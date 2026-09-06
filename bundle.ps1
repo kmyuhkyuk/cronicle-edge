@@ -512,9 +512,10 @@ Write-Host "  cd $Path
 # perform unit test if needed
 if($Test) {
 
-  Write-Bold "Running unit test"
-  Write-Host "     - building test script"
-  esbuild --bundle --outdir=$Path/bin/ --platform=node lib/test.js
-  node .\node_modules\pixl-unit\unit.js $Path\bin\test.js 
-  Remove-Item $Path\bin\test.js 
+  # Write-Bold "Running unit test"
+  # Write-Host "     - building test script"
+  # esbuild --bundle --outdir=$Path/bin/ --platform=node lib/test.js
+  # node .\node_modules\pixl-unit\unit.js $Path\bin\test.js 
+  # Remove-Item $Path\bin\test.js 
+  npm test
 }
