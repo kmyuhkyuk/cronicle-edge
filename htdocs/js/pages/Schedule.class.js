@@ -80,8 +80,7 @@ Class.subclass(Page.Base, "Page.Schedule", {
 			});
 			//app.showMessage('success', resp.data);
 			// self.gosub_servers(self.args);
-		});
-		//app.api.get('app/export?session_id=' + localStorage.session_id )
+		});		
 	},
 
 	show_graph: function (args) {
