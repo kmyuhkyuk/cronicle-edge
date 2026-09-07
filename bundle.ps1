@@ -517,5 +517,5 @@ if($Test) {
   # esbuild --bundle --outdir=$Path/bin/ --platform=node lib/test.js
   # node .\node_modules\pixl-unit\unit.js $Path\bin\test.js 
   # Remove-Item $Path\bin\test.js 
-  npm test
+  npm test -- --verbose
 }

@@ -533,5 +533,5 @@ if [ "$test" = 1 ]; then
   # node node_modules/pixl-unit/unit.js $dist/bin/test.js --verbose
   # remove test files
   # rm $dist/bin/test.js
-  npm test
+  npm test -- --verbose
 fi
