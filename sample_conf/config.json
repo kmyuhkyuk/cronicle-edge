@@ -23,6 +23,7 @@
 	"dead_job_timeout": 120,
 	"manager_ping_freq": 20,
 	"manager_ping_timeout": 60,
+	"remote_server_auth_window": 60,
 	"udp_broadcast_port": 3014,
 	"scheduler_startup_grace": 10,
 	"universal_web_hook": "",

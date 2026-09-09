@@ -7,13 +7,13 @@
 # FROM alpine:3.19.1
 # RUN apk add --no-cache bash nodejs tini util-linux bash openssl procps coreutils curl tar jq
 
-FROM cronicle/base-alpine AS build
+FROM cronicle/base-alpine:v3.24.1@sha256:47d1cbeaf01c89e656c3907e7860210d97c99666cfd970427e41f3b746bcb33f AS build
 RUN apk add --no-cache npm python3 alpine-sdk
 COPY . /build
 WORKDIR /build
 RUN ./bundle /dist --mysql --pgsql --s3 --sqlite --tools
 
-FROM cronicle/base-alpine 
+FROM cronicle/base-alpine:v3.24.1@sha256:47d1cbeaf01c89e656c3907e7860210d97c99666cfd970427e41f3b746bcb33f 
 
 # non root user for shell plugin
 ARG CRONICLE_UID=1000
