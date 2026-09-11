@@ -25,11 +25,11 @@
 			"modified": 1434125333,
 			"created": 1434125333,
 			"params": [
-				{ "id":"duration", "type":"text", "size":10, "title":"Test Duration (seconds)", "value": 60 },
+				{ "id":"duration", "type":"text", "size":10, "title":"Test Duration (seconds)", "value": "60" },
 				{ "id":"progress", "type":"checkbox", "title":"Report Progress", "value": 1 },
 				{ "id":"burn", "type":"checkbox", "title":"Burn Memory/CPU", "value": 0 },
 				{ "id":"action", "type":"select", "title":"Simulate Action", "items":["Success","Failure","Crash","Random"], "value": "Success" },
-				{ "id":"secret", "type":"hidden", "value":"Will not be shown in Event UI" }
+				{ "id":"secret", "type":"hidden", "title": "Hidden", "value":"Will not be shown in Event UI" }
 			]
 		} ],
 		[ "listPush", "global/plugins", {
@@ -44,7 +44,7 @@
 			"params": [
 				{ "id":"script", "type":"textarea", "rows":10, "title":"Script Source", "value": "#!/usr/bin/env bash\n\n# Enter your shell script code here\n# Press F11 to toggle full screen mode\n# To get workflow's job argument refer to $JOB_ARG env variable\n\n# am I windows?\necho $PSVersionTable\n\necho \"print integer with % to report progress (e.g. 20%)\"\n sleep 2; echo \"$(date)\"; echo 10%\n sleep 2; echo \"$(date)\"; echo 40%\n sleep 2; echo \"$(date)\"; echo 90%\n sleep 2\necho '{\"perf\":{\"step3\":55,\"step2\":30,\"step1\":20}}'" },
 				{ "id":"annotate", "type":"checkbox", "title":"Add Date/Time Stamps to Log", "value": 0 },
-				{ "id":"classic_stamp", "type":"hidden", "title":"Use Classic (Local) Date/Time Stamps", "value": 0 },
+				{ "id":"classic_stamp", "type":"hidden", "title":"Use Classic (Local) Date/Time Stamps", "value": "0" },
 				{ "id":"json", "type":"checkbox", "title":"Interpret JSON in Output", "value": 0 },
 				{"type":"checkbox","id":"sub_params","title":"Resolve parameters","value":0},
 				{"type":"filelist","id":"files","title":"File List","theme":"default", "value":0}	
