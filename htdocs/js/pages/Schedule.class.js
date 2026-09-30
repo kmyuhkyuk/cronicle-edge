@@ -715,6 +715,7 @@ Class.subclass(Page.Base, "Page.Schedule", {
 			'Target',
 			'Timing',
 			'Status',
+			'Elapsed Time',
 			'Modified',
 			'Actions'
 		];
@@ -832,7 +833,7 @@ Class.subclass(Page.Base, "Page.Schedule", {
 		let isGrid = eventView === 'grid' || eventView === 'gridall'
 
 		html += `
-		 <div class="subtitle flex-container" style="height:auto;padding:8px">
+		 <div class="subtitle flex-container" style="height:auto">
 		 <div style="width: calc(45%)">Scheduled Events ${cycleWarning}</div>
 		 <div class="flex-container" style="width:calc(10%)">${miniButtons}</div>
 		 <div style="width: calc(45%);padding-right:10px">
@@ -887,7 +888,7 @@ Class.subclass(Page.Base, "Page.Schedule", {
 		</div>
 		`
 		// searchBar
-		cols.headerCenter = `<div style="padding-bottom:8px;padding-right:12px"><i class="fa fa-search">&nbsp;</i><input type="text" id="fe_sch_keywords" size="25" onfocus="this.placeholder=''" placeholder="Find events..." class="event-search" autocomplete="one-time-code" value="${escape_text_field_value(args.keywords)}"/></div>`
+		cols.headerCenter = `<div class="schedule_search"><span><i class="fa fa-search">&nbsp;</i><input type="text" id="fe_sch_keywords" size="25" onfocus="this.placeholder=''" placeholder="Find events..." class="event-search" autocomplete="one-time-code" value="${escape_text_field_value(args.keywords)}"/></span></div>`
 
 		// render table
 		let last_group = '';
@@ -1019,6 +1020,7 @@ Class.subclass(Page.Base, "Page.Schedule", {
 				self.getNiceGroup(group, item.target, col_width),
 				niceTiming + chainInfo,
 				'<span id="ss_' + item.id + '" onMouseUp="$P().jump_to_last_job(' + idx + ')">' + status_html + '</span>',
+				'<span data-event-elapsed="' + escape_text_field_value(item.id) + '" title="Duration of the last completed run, including failed runs">' + self.get_last_job_elapsed(item.id) + '</span>',
 				get_text_from_seconds(now - item.modified, true, true), //modified
 				actions.join('&nbsp;|&nbsp;')
 			];
@@ -1159,7 +1161,7 @@ Class.subclass(Page.Base, "Page.Schedule", {
 		}
 
 		html += '<td><div class="button" style="width:130px;" onMouseUp="$P().show_graph()"><i class="fa fa-pie-chart">&nbsp;&nbsp;</i>Show Graph</div></td><td width="40">&nbsp;</td>';
-		this.div.html(html);
+		this.div.html('<div style="padding:20px 20px 30px 20px">' + html + '</div>');
 		if (!isGrid) this.init_schedule_columns();
 		this.update_job_last_runs();
 
@@ -1173,17 +1175,31 @@ Class.subclass(Page.Base, "Page.Schedule", {
 		}, 1);
 	},
 
+	get_last_job_elapsed: function (event_id) {
+		var elapsed = (app.state.jobElapsed || {})[event_id];
+		return Number.isFinite(elapsed) && elapsed >= 0 ? get_text_from_seconds(elapsed, true, false) : 'n/a';
+	},
+
+	update_job_last_elapsed: function () {
+		var self = this;
+		this.div.find('[data-event-elapsed]').each(function () {
+			this.innerHTML = self.get_last_job_elapsed(this.getAttribute('data-event-elapsed'));
+		});
+	},
+
 	init_schedule_columns: function () {
 		// Keep this preference local to the browser, including across restarts.
 		var self = this;
 		var table = this.div.find('#schedule_table table.data_table')[0];
 		if (!table) return;
 		var headers = Array.from(table.rows[0].cells);
-		var keys = ['enabled', 'title', 'category', 'plugin', 'target', 'timing', 'status', 'modified', 'actions'];
+		var keys = ['enabled', 'title', 'category', 'plugin', 'target', 'timing', 'status', 'elapsed', 'modified', 'actions'];
 		var pref = 'schedule_column_widths_v1';
 		var widths = {};
 		try { widths = JSON.parse(localStorage.getItem(pref)) || {}; }
 		catch (err) { /* Storage may be unavailable or contain an old invalid value. */ }
+		// Preserve the existing nine-column preference when adding Elapsed Time.
+		if (widths.title && widths.elapsed === undefined) widths.elapsed = 120;
 		if (!keys.every(function (key) { return Number.isFinite(widths[key]) && widths[key] >= 40 && widths[key] <= 2000; })) widths = {};
 
 		table.parentNode.classList.add('schedule_table_scroll');
@@ -3526,7 +3542,10 @@ Class.subclass(Page.Base, "Page.Schedule", {
 
 			case 'state':
 				if (this.args.sub == 'edit_event') this.update_rc_value();
-				else if (this.args.sub == 'events') this.update_job_last_runs();
+				else if (this.args.sub == 'events') {
+					this.update_job_last_runs();
+					this.update_job_last_elapsed();
+				}
 				break;
 
 			case 'tick':  // refresh schedule page on minute tick to update timing
