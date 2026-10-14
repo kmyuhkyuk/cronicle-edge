@@ -1,0 +1,67 @@
+name: Sync Upstream and Release Tag
+
+on:
+  schedule:
+    - cron: '0 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: write
+
+env:
+  UPSTREAM_REPO: "cronicle-edge/cronicle-edge"
+  SYNC_BRANCH: "main"
+
+jobs:
+  sync-and-tag:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Fork Repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Sync upstream changes
+        id: sync
+        uses: aormsby/Fork-Sync-With-Upstream-action@v3.4.1
+        with:
+          upstream_sync_repo: ${{ env.UPSTREAM_REPO }}
+          upstream_sync_branch: ${{ env.SYNC_BRANCH }}
+          target_sync_branch: ${{ env.SYNC_BRANCH }}
+          target_repo_token: ${{ secrets.GITHUB_TOKEN }}
+          test_mode: false
+
+      - name: Check Upstream Release and Create Tag
+        id: check_release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          LATEST_TAG=$(gh api repos/${{ env.UPSTREAM_REPO }}/releases/latest --jq '.tag_name' || echo "")
+
+          if [ -z "$LATEST_TAG" ]; then
+            echo "new_tag=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          if git rev-parse "$LATEST_TAG" >/dev/null 2>&1; then
+            echo "new_tag=false" >> $GITHUB_OUTPUT
+          else
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git tag "$LATEST_TAG"
+            git push origin "$LATEST_TAG"
+            echo "new_tag=true" >> $GITHUB_OUTPUT
+            echo "tag_name=$LATEST_TAG" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Dispatch DockerHub Multi-arch Workflow
+        if: steps.check_release.outputs.new_tag == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh workflow run dockerhub-multi.yaml \
+            --repo "$GITHUB_REPOSITORY" \
+            --ref "${{ steps.check_release.outputs.tag_name }}" \
+            -f tag="${{ steps.check_release.outputs.tag_name }}"
